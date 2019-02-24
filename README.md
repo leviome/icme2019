@@ -5,15 +5,23 @@
 ShenDezhou
 
 #Version
-3.0
+4.0
 
 #changelog
 1.0使用前10000条
-2.0使用每1000条前100条
+2.0使用每10000条前100条
 3.0使用全量track2记录，但由于GPU内存不足，xDeepFM的embedding使用了1个
+4.0使用1%track1数据，2758600 records, 50 epochs, loss: 0.146。
 
 #准备
 创建input文件夹
+Track1：  
+训练集地址：
+http://lf1-ttcdn-tos.pstatp.com/obj/icme2019&bytedance_challenge_dataset/final_track1_train.txt.tgz
+测试集地址：
+http://lf1-ttcdn-tos.pstatp.com/obj/icme2019&bytedance_challenge_dataset/final_track1_test_no_anwser.txt.tgz
+
+TRACK2  
 训练集地址：
 http://lf1-ttcdn-tos.pstatp.com/obj/icme2019&bytedance_challenge_dataset/final_track2_train.txt.tgz
 测试集地址：
