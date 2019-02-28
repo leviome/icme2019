@@ -5,7 +5,11 @@
 ShenDezhou
 
 #Version  
-4.0
+5.0
+
+#入口  
+automodel.py
+
 
 #changelog
 1.0使用前10000条  
