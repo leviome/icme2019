@@ -38,7 +38,7 @@ def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile
     dense_features=[]
     target=defaulttarget
     for column in data.columns:
-        if column not in defaulttarget:
+        if column in defaulttarget:
             continue
         if data[column].dtype in  [numpy.float_ , numpy.float64]:
             dense_features.append(column)
