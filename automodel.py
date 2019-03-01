@@ -18,7 +18,7 @@ def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile
     while loop:
         try:
             chunk=data.get_chunk(10000)
-            chunk=chunk.take(list(range(PERCENT*100)), axis=0)
+            chunk=chunk.take(list(range(min(chunk.shape[0], PERCENT*100))), axis=0)
             take.append(chunk)
         except StopIteration:
             loop=False
