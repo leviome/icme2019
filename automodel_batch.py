@@ -12,6 +12,49 @@ def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile
                 defaultcolumnname=['uid', 'user_city', 'item_id', 'author_id', 'item_city', 'channel', 'finish', 'like', 'music_id', 'did', 'creat_time', 'video_duration'],
                 defaulttarget=['finish', 'like'], defaultmodel="AFM", PERCENT=100):
     
+    # read file and build sparse feature list
+    # fix a bug for version 6 when:
+    #     tensorflow.python.framework.errors_impl.InvalidArgumentError: indices[15134,0] = 60990 is not in [0, 59414)
+    #      [[{{node sparse_emb_6-music_id/embedding_lookup}} = ..
+    data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
+        #**************Features
+    sparse_features=[]
+    dense_features=[]
+    target=defaulttarget
+    
+    loop = True
+    uniq_dic={}
+    while loop:
+        try:
+            chunk=data.get_chunk(10**7)
+            if len(dense_features)+len(sparse_features)==0:
+                for column in chunk.columns:
+                    if column in defaulttarget:
+                        continue
+                    if chunk[column].dtype in  [numpy.float_ , numpy.float64]:
+                        dense_features.append(column)
+                    if chunk[column].dtype in [numpy.int_, numpy.int64]:
+                        sparse_features.append(column)
+                uniq_dic=dict((feat,[]) for feat in sparse_features)
+            
+            # get all sparse cases in sample data
+            for feat in sparse_features:
+                uniq_dic[feat].extend(chunk[feat].unique())
+                uniq_dic[feat] = list(set(uniq_dic[feat]))
+                
+        except StopIteration:
+            loop=False
+            print('stop iteration for sparse feature engineering')
+        
+    #6. generate input data for model
+    sparse_feature_list = [SingleFeat(feat, len(uniq_dic[feat]))
+                           for feat in sparse_features]
+    dense_feature_list = [SingleFeat(feat, 0)
+                          for feat in dense_features]
+    data.close()
+    # read file and build sparse feature list
+    
+    # traing begins
     data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
     #1 train file
     loop = True
@@ -23,26 +66,26 @@ def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile
                 chunk=chunk.take(list(range(min(chunk.shape[0], PERCENT*100))), axis=0)
 
             if not feature_model:
-                #**************Features
-                sparse_features=[]
-                dense_features=[]
-                target=defaulttarget
-                for column in chunk.columns:
-                    if column in defaulttarget:
-                        continue
-                    if chunk[column].dtype in  [numpy.float_ , numpy.float64]:
-                        dense_features.append(column)
-                    if chunk[column].dtype in [numpy.int_, numpy.int64]:
-                        sparse_features.append(column)
-                
-            
-                #6. generate input data for model
-                sparse_feature_list = [SingleFeat(feat, chunk[feat].nunique())
-                                       for feat in sparse_features]
-                dense_feature_list = [SingleFeat(feat, 0)
-                                      for feat in dense_features]
-                
-                #**************Features
+#                 #**************Features
+#                 sparse_features=[]
+#                 dense_features=[]
+#                 target=defaulttarget
+#                 for column in chunk.columns:
+#                     if column in defaulttarget:
+#                         continue
+#                     if chunk[column].dtype in  [numpy.float_ , numpy.float64]:
+#                         dense_features.append(column)
+#                     if chunk[column].dtype in [numpy.int_, numpy.int64]:
+#                         sparse_features.append(column)
+#                 
+#             
+#                 #6. generate input data for model
+#                 sparse_feature_list = [SingleFeat(feat, chunk[feat].nunique())
+#                                        for feat in sparse_features]
+#                 dense_feature_list = [SingleFeat(feat, 0)
+#                                       for feat in dense_features]
+#                 
+#                 #**************Features
                 
                 #****************model
                 # 6.choose a model
@@ -114,9 +157,9 @@ def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile
         mms = MinMaxScaler(feature_range=(0, 1))
         test_data[dense_features] = mms.fit_transform(test_data[dense_features])
     #*****************normal
-    test = test_data
-    test_model_input = [test[feat.name].values for feat in sparse_feature_list] + \
-        [test[feat.name].values for feat in dense_feature_list]
+    #test = test_data
+    test_model_input = [test_data[feat.name].values for feat in sparse_feature_list] + \
+        [test_data[feat.name].values for feat in dense_feature_list]
        
     pred_ans = model.predict(test_model_input, batch_size=2**14)
         
