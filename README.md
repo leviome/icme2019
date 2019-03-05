@@ -10,6 +10,7 @@ ShenDezhou
 #入口  
 automodel_batch.py(to be test)
 automodel.py(legacy entry, Track2 AUC=0.72(100%data),0.69(10%))
+train.py(baseline entrypoint, Good place to start)
 
 
 #changelog  
