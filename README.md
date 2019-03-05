@@ -17,7 +17,7 @@ automodel.py(legacy entry, Track2 AUC=0.72(100%data),0.69(10%))
 2.0使用每10000条前100条  
 3.0使用全量track2记录，但由于GPU内存不足，xDeepFM的embedding使用了1个  
 4.0使用1%track1数据，2758600 records, 50 epochs, loss: 0.146  
-5.0使用10%track2数据，PNN算法跑到0.68，目前的SOTA算法
+5.0使用10%track2数据，PNN算法跑到0.68，目前的SOTA算法  
 6.0增加新入口，使用batch模式来训练模型，待验证。
 
 #准备
