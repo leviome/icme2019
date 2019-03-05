@@ -5,10 +5,11 @@
 ShenDezhou
 
 #Version  
-5.0
+6.0
 
 #入口  
-automodel.py
+automodel_batch.py(to be test)
+automodel.py(legacy entry, Track2 AUC=0.72(100%data),0.69(10%))
 
 
 #changelog
@@ -16,6 +17,8 @@ automodel.py
 2.0使用每10000条前100条  
 3.0使用全量track2记录，但由于GPU内存不足，xDeepFM的embedding使用了1个  
 4.0使用1%track1数据，2758600 records, 50 epochs, loss: 0.146  
+5.0使用10%track2数据，PNN算法跑到0.68，目前的SOTA算法
+6.0增加新入口，使用batch模式来训练模型，待验证。
 
 #准备
 创建input文件夹
@@ -46,6 +49,7 @@ track2: f, l = [0.65664805622285116, 0.88436296785010238]
 #Rank
 95     dezhou 0.57685 (0.57,0.60)	1  
 130	levio 	0.72496 (0.66,0.88)	3  
+225    tpt    0.72496 (0.66,0.88)	6  
 
 #哈哈，好low啊
 
