@@ -12,7 +12,7 @@ automodel_batch.py(to be test)
 automodel.py(legacy entry, Track2 AUC=0.72(100%data),0.69(10%))
 
 
-#changelog
+#changelog  
 1.0使用前10000条  
 2.0使用每10000条前100条  
 3.0使用全量track2记录，但由于GPU内存不足，xDeepFM的embedding使用了1个  
