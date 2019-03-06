@@ -5,11 +5,12 @@
 ShenDezhou
 
 #Version  
-6.0
+7.0
 
 #入口  
+automodel_batch.py(7.0 to be tested)
 automodel.py(legacy and golden entry, Track2 AUC=0.72(100%data),0.69(10%))
-automodel_batch.py(AUC=0.52)
+automodel_batch.py(6.0 version: AUC=0.52)
 train.py(baseline entrypoint, Good place to start)
 
 
@@ -20,6 +21,7 @@ train.py(baseline entrypoint, Good place to start)
 4.0使用1%track1数据，2758600 records, 50 epochs, loss: 0.146  
 5.0使用10%track2数据，PNN算法跑到0.68，目前的SOTA算法  
 6.0增加新入口，使用batch模式来训练模型，待验证。
+7.0针对6.0分块训练结果不理想的问题，重新修改了逻辑，基本跟automodel.py一样，只是保留了一些enhancement，比如sparse feature分析的代码。 
 
 #准备
 创建input文件夹
