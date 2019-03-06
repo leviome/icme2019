@@ -1,6 +1,13 @@
 # icme2019
 短视频内容理解与推荐竞赛
 
+#战队成员  
+chdwwk
+yufang
+*dezhou
+levio
+
+
 #Author  
 ShenDezhou
 
