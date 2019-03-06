@@ -141,6 +141,7 @@ def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile
     
     #2 test file       
     test_data = pd.read_csv(defaulttestfile, sep='\t', names=defaultcolumnname, )
+    raw_test_data=test_data.copy()
     #data = data.append(test_data)
     test_size=test_data.shape[0]
     print(test_size)
@@ -163,7 +164,7 @@ def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile
        
     pred_ans = model.predict(test_model_input, batch_size=2**14)
         
-    result = test_data[['uid', 'item_id', 'finish', 'like']].copy()
+    result = raw_test_data[['uid', 'item_id', 'finish', 'like']].copy()
     result.rename(columns={'finish': 'finish_probability',
                            'like': 'like_probability'}, inplace=True)
     result['finish_probability'] = pred_ans[0]
