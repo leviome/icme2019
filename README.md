@@ -23,8 +23,8 @@ train.py(baseline entrypoint, Good place to start)
 6.0增加新入口，使用batch模式来训练模型，待验证。
 7.0针对6.0分块训练结果不理想的问题，重新修改了逻辑，基本跟automodel.py一样，只是保留了一些enhancement，比如sparse feature分析的代码。 
 
-#准备
-创建input文件夹
+#准备  
+创建input文件夹  
 Track1：  
 训练集地址：
 http://lf1-ttcdn-tos.pstatp.com/obj/icme2019&bytedance_challenge_dataset/final_track1_train.txt.tgz
@@ -37,10 +37,10 @@ http://lf1-ttcdn-tos.pstatp.com/obj/icme2019&bytedance_challenge_dataset/final_t
 测试集地址：
 http://lf1-ttcdn-tos.pstatp.com/obj/icme2019&bytedance_challenge_dataset/final_track2_test_no_anwser.txt.tgz
 
-#训练
+#训练  
 代码中使用了10000行数据进行100轮训练，该训练集上的结果为AUC1.0 1.0
 
-#成绩
+#成绩  
 0.576847387841962
 track2: f, l = [0.56782278397016517, 0.59790479687615328]  
 0.623347830227737
@@ -49,7 +49,7 @@ track2: f, l = [0.60371408494758505, 0.6691599025480921]
 track2: f, l = [0.65664805622285116, 0.88436296785010238]  
 
 
-#Rank
+#Rank  
 95     dezhou 0.57685 (0.57,0.60)	1  
 130	levio 	0.72496 (0.66,0.88)	3  
 225    tpt    0.72496 (0.66,0.88)	6  
