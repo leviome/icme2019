@@ -28,7 +28,8 @@ train.py(baseline entrypoint, Good place to start)
 4.0使用1%track1数据，2758600 records, 50 epochs, loss: 0.146  
 5.0使用10%track2数据，PNN算法跑到0.68，目前的SOTA算法  
 6.0增加新入口，使用batch模式来训练模型，待验证。
-7.0针对6.0分块训练结果不理想的问题，重新修改了逻辑，基本跟automodel.py一样，只是保留了一些enhancement，比如sparse feature分析的代码。 
+7.0针对6.0分块训练结果不理想的问题，重新修改了逻辑，基本跟automodel.py一样，只是保留了一些enhancement，比如sparse feature分析的代码。  
+7.1我的850MGPU只有1.9G，用Track2全量时，模型太大无法装入显存，于是把PNN模型的embedding_size改成1，ROC——AUC只有0.54，这样看来使用大内存更好。
 
 #准备  
 创建input文件夹  
