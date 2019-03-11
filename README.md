@@ -12,12 +12,11 @@ levio
 ShenDezhou
 
 #Version  
-7.0
+8.0
 
 #入口  
 automodel.py(legacy and golden entry, Track2 AUC=0.72(100%data), Track1 AUC=0.70（10%data）)  
-automodel_batch.py(7.0 AUC=0.52)  
-automodel_batch.py(6.0 AUC=0.52)  
+automodel_batch.py(8.0 testing 7.0 AUC=0.52 6.0 AUC=0.52)  
 train.py(baseline entrypoint, Good place to start)  
 
 
