@@ -15,9 +15,9 @@ ShenDezhou
 7.0
 
 #入口  
-automodel_batch.py(7.0 to be tested)  
-automodel.py(legacy and golden entry, Track2 AUC=0.72(100%data),0.69(10%))  
-automodel_batch.py(6.0 version: AUC=0.52)  
+automodel.py(legacy and golden entry, Track2 AUC=0.72(100%data), Track1 AUC=0.70（10%data）)  
+automodel_batch.py(7.0 AUC=0.52)  
+automodel_batch.py(6.0 AUC=0.52)  
 train.py(baseline entrypoint, Good place to start)  
 
 
