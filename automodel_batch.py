@@ -17,73 +17,93 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     #     tensorflow.python.framework.errors_impl.InvalidArgumentError: indices[15134,0] = 60990 is not in [0, 59414)
     #      [[{{node sparse_emb_6-music_id/embedding_lookup}} = ..
     #**************Features
-    sparse_features=[]
-    dense_features=[]
-    target=defaulttarget
-    
-    data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
-    loop = True
-    uniq_dic={}
-    while loop:
-        try:
-            chunk=data.get_chunk(10**7)
-            if len(dense_features)+len(sparse_features)==0:
-                for column in chunk.columns:
-                    if column in defaulttarget:
-                        continue
-                    if chunk[column].dtype in  [numpy.float_ , numpy.float64]:
-                        dense_features.append(column)
-                    if chunk[column].dtype in [numpy.int_, numpy.int64]:
-                        sparse_features.append(column)
-                uniq_dic=dict((feat,[]) for feat in sparse_features)
-            
-            # get all sparse cases in sample data
-            for feat in sparse_features:
-                uniq_dic[feat].extend(chunk[feat].unique())
-                uniq_dic[feat] = list(set(uniq_dic[feat]))
-                
-        except StopIteration:
-            loop=False
-            print('stop iteration for sparse feature engineering')
-        
+#     sparse_features=[]
+#     dense_features=[]
+    #target=defaulttarget
+     
+#     data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
+#     loop = True
+#     uniq_dic={}
+#     while loop:
+#         try:
+#             chunk=data.get_chunk(10**7)
+#             if len(dense_features)+len(sparse_features)==0:
+#                 for column in chunk.columns:
+#                     if column in defaulttarget:
+#                         continue
+#                     if chunk[column].dtype in  [numpy.float_ , numpy.float64]:
+#                         dense_features.append(column)
+#                     if chunk[column].dtype in [numpy.int_, numpy.int64]:
+#                         sparse_features.append(column)
+#                 uniq_dic=dict((feat,[]) for feat in sparse_features)
+#              
+#             # get all sparse cases in sample data
+#             for feat in sparse_features:
+#                 uniq_dic[feat].extend(chunk[feat].unique())
+#                 uniq_dic[feat] = list(set(uniq_dic[feat]))
+#                  
+#         except StopIteration:
+#             loop=False
+#             print('stop iteration for sparse feature engineering')
+         
     #6. generate input data for model
-    sparse_feature_list = [SingleFeat(feat, len(uniq_dic[feat]))
-                           for feat in sparse_features]
-    dense_feature_list = [SingleFeat(feat, 0)
-                          for feat in dense_features]
-    data.close()
+#     sparse_feature_list = [SingleFeat(feat, len(uniq_dic[feat]))
+#                            for feat in sparse_features]
+#     dense_feature_list = [SingleFeat(feat, 0)
+#                           for feat in dense_features]
+
     # read file and build sparse feature list
     
-    # traing begins
+    #1 train file
     data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
     #1 train file concats
-    loop = True
     take=[]
+    loop = True
     while loop:
         try:
-            chunk=data.get_chunk(10**7)
+            chunk=data.get_chunk(10000)
             if PERCENT < 100 and PERCENT > 0:
                 chunk=chunk.take(list(range(min(chunk.shape[0], PERCENT*100))), axis=0)
-            
-            #***************normal
-            #3. Remove na values
-            chunk[sparse_features] = chunk[sparse_features].fillna('-1', )
-            chunk[dense_features] = chunk[dense_features].fillna(0,)
-            #4. Label Encoding for sparse features, and do simple Transformation for dense features
-            for feat in sparse_features:
-                lbe = LabelEncoder()
-                chunk[feat] = lbe.fit_transform(chunk[feat])
-            #5. Dense normalize
-            if dense_features:
-                mms = MinMaxScaler(feature_range=(0, 1))
-                chunk[dense_features] = mms.fit_transform(chunk[dense_features])
-            #*****************normal
             take.append(chunk)
         except StopIteration:
             loop=False
             print('stop iteration')
+            
+    data = pd.concat(take, ignore_index=True) 
+    train_size = data.shape[0]
+    print(train_size)
     
-    train_data=pd.concat(take, copy=False)
+    sparse_features=[]
+    dense_features=[]
+    target=defaulttarget
+    for column in data.columns:
+        if column in defaulttarget:
+            continue
+        if data[column].dtype in  [numpy.float_ , numpy.float64]:
+            dense_features.append(column)
+        if data[column].dtype in [numpy.int_, numpy.int64]:
+            sparse_features.append(column)
+
+
+    #***************normal
+    #3. Remove na values
+    data[sparse_features] = data[sparse_features].fillna('-1', )
+    data[dense_features] = data[dense_features].fillna(0,)
+    #4. Label Encoding for sparse features, and do simple Transformation for dense features
+    for feat in sparse_features:
+        lbe = LabelEncoder()
+        data[feat] = lbe.fit_transform(data[feat])
+    #5. Dense normalize
+    if dense_features:
+        mms = MinMaxScaler(feature_range=(0, 1))
+        data[dense_features] = mms.fit_transform(data[dense_features])
+    #*****************normal
+        #6. generate input data for model
+    sparse_feature_list = [SingleFeat(feat, data[feat].nunique())
+                           for feat in sparse_features]
+    dense_feature_list = [SingleFeat(feat, 0)
+                          for feat in dense_features]
+    
     #****************model
     # 6.choose a model
     import pkgutil
@@ -101,16 +121,19 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     
     model.compile("adam", loss="binary_crossentropy", metrics=[auc])
 
-        
-    train_model_input = [train_data[feat.name].values for feat in sparse_feature_list] + \
-                        [train_data[feat.name].values for feat in dense_feature_list]
-    train_labels = [train_data[target].values for target in defaulttarget]
 
-    my_callbacks = [EarlyStopping(monitor='loss', min_delta=1e-2, patience=2, verbose=1, mode='min')]
+    train_model_input = [data[feat.name].values for feat in sparse_feature_list] + \
+                        [data[feat.name].values for feat in dense_feature_list]
+    train_labels = [data[target].values for target in defaulttarget]
+
+    my_callbacks = [EarlyStopping(monitor='loss', min_delta=1e-3, patience=5, verbose=1, mode='min')]
 
     history = model.fit(train_model_input, train_labels,
                 batch_size=2**14, epochs=100, verbose=1, callbacks=my_callbacks)
 
+    del [train_model_input, train_labels, chunk, data]
+    import objgraph
+    objgraph.show_refs([data], filename='data-graph.png')
     
     #2 test file       
     test_data = pd.read_csv(defaulttestfile, sep='\t', names=defaultcolumnname, )
