@@ -7,53 +7,16 @@ from deepctr.models import DeepFM
 from deepctr import SingleFeat
 import tensorflow as tf
 from keras.callbacks import EarlyStopping
+import gc
 
 def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile='./input/final_track1_test_no_anwser.txt',
                 defaultcolumnname=['uid', 'user_city', 'item_id', 'author_id', 'item_city', 'channel', 'finish', 'like', 'music_id', 'did', 'creat_time', 'video_duration'],
                 defaulttarget=['finish', 'like'], defaultmodel="AFM", PERCENT=100):
-    
-    # read file and build sparse feature list
-    # fix a bug for version 6 when:
-    #     tensorflow.python.framework.errors_impl.InvalidArgumentError: indices[15134,0] = 60990 is not in [0, 59414)
-    #      [[{{node sparse_emb_6-music_id/embedding_lookup}} = ..
-    #**************Features
-#     sparse_features=[]
-#     dense_features=[]
-    #target=defaulttarget
+        
+    sparse_features=[]
+    dense_features=[]
+    target=defaulttarget    
      
-#     data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
-#     loop = True
-#     uniq_dic={}
-#     while loop:
-#         try:
-#             chunk=data.get_chunk(10**7)
-#             if len(dense_features)+len(sparse_features)==0:
-#                 for column in chunk.columns:
-#                     if column in defaulttarget:
-#                         continue
-#                     if chunk[column].dtype in  [numpy.float_ , numpy.float64]:
-#                         dense_features.append(column)
-#                     if chunk[column].dtype in [numpy.int_, numpy.int64]:
-#                         sparse_features.append(column)
-#                 uniq_dic=dict((feat,[]) for feat in sparse_features)
-#              
-#             # get all sparse cases in sample data
-#             for feat in sparse_features:
-#                 uniq_dic[feat].extend(chunk[feat].unique())
-#                 uniq_dic[feat] = list(set(uniq_dic[feat]))
-#                  
-#         except StopIteration:
-#             loop=False
-#             print('stop iteration for sparse feature engineering')
-         
-    #6. generate input data for model
-#     sparse_feature_list = [SingleFeat(feat, len(uniq_dic[feat]))
-#                            for feat in sparse_features]
-#     dense_feature_list = [SingleFeat(feat, 0)
-#                           for feat in dense_features]
-
-    # read file and build sparse feature list
-    
     #1 train file
     data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
     #1 train file concats
@@ -61,21 +24,20 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     loop = True
     while loop:
         try:
-            chunk=data.get_chunk(10000)
-            if PERCENT < 100 and PERCENT > 0:
-                chunk=chunk.take(list(range(min(chunk.shape[0], PERCENT*100))), axis=0)
+            chunk=data.get_chunk(10000000)
+            chunk=chunk.sample(frac=PERCENT/100., replace=True, random_state=1)
             take.append(chunk)
+            gc.collect()
         except StopIteration:
             loop=False
             print('stop iteration')
             
-    data = pd.concat(take, ignore_index=True) 
+    data = pd.concat(take, ignore_index=True, copy=False) 
     train_size = data.shape[0]
     print(train_size)
-    
-    sparse_features=[]
-    dense_features=[]
-    target=defaulttarget
+    take.clear()
+    del [chunk,take]
+        
     for column in data.columns:
         if column in defaulttarget:
             continue
@@ -83,12 +45,14 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
             dense_features.append(column)
         if data[column].dtype in [numpy.int_, numpy.int64]:
             sparse_features.append(column)
-
-
+            
+#     sparse_features=list(set(sparse_features))
+#     dense_features=list(set(dense_features))
     #***************normal
     #3. Remove na values
-    data[sparse_features] = data[sparse_features].fillna('-1', )
-    data[dense_features] = data[dense_features].fillna(0,)
+    data[sparse_features].fillna('-1', inplace=True)
+    data[dense_features].fillna(0, inplace=True)
+    
     #4. Label Encoding for sparse features, and do simple Transformation for dense features
     for feat in sparse_features:
         lbe = LabelEncoder()
@@ -129,11 +93,11 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     my_callbacks = [EarlyStopping(monitor='loss', min_delta=1e-3, patience=5, verbose=1, mode='min')]
 
     history = model.fit(train_model_input, train_labels,
-                batch_size=2**14, epochs=100, verbose=1, callbacks=my_callbacks)
+                batch_size=2**17, epochs=100, verbose=1, callbacks=my_callbacks)
 
-    del [train_model_input, train_labels, chunk, data]
-    import objgraph
-    objgraph.show_refs([data], filename='data-graph.png')
+    del [train_model_input, train_labels, data]
+#     import objgraph
+#     objgraph.show_refs([data], filename='data-graph.png')
     
     #2 test file       
     test_data = pd.read_csv(defaulttestfile, sep='\t', names=defaultcolumnname, )
@@ -143,8 +107,8 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     print(test_size)
     #***************normal
     #3. Remove na values
-    test_data[sparse_features] = test_data[sparse_features].fillna('-1', )
-    test_data[dense_features] = test_data[dense_features].fillna(0,)
+    test_data[sparse_features].fillna('-1', inplace=True)
+    test_data[dense_features].fillna(0, inplace=True)
     #4. Label Encoding for sparse features, and do simple Transformation for dense features
     for feat in sparse_features:
         lbe = LabelEncoder()
@@ -182,6 +146,6 @@ if __name__ == "__main__":
         print(modelname)
         if models_dic[modelname] not in ["PNN"]:
             continue
-        history = model_pool(defaultmodel=models_dic[modelname], PERCENT=100)
+        history = model_pool(defaultmodel=models_dic[modelname], PERCENT=90)
         print(history.history)
         
