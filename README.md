@@ -29,7 +29,8 @@ train.py(baseline entrypoint, Good place to start)
 6.0增加新入口，使用batch模式来训练模型，待验证。  
 7.0针对6.0分块训练结果不理想的问题，重新修改了逻辑，基本跟automodel.py一样，只是保留了一些enhancement，比如sparse feature分析的代码。  
 7.1我的850MGPU只有1.9G，用Track2全量时，模型太大无法装入显存，于是把PNN模型的embedding_size改成1，ROC——AUC只有0.54，这样看来使用大内存更好。
-8.0在Track1上运行算法，使用10%数据集，运行4Epochs就收敛停止了，0.70445 (0.65,0.84)，RANK#35
+8.0在Track1上运行算法，使用10%数据集，运行4Epochs就收敛停止了，0.70445 (0.65,0.84)，RANK#35  
+8.1在Track2下使用100%数据集，由于GPU显存原因Embedding Size=2，训练结束Score=0.51，入口代码使用automode_batch.py,需要更大的显存重新跑这一版
 
 #准备  
 创建input文件夹  
