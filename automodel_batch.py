@@ -9,6 +9,8 @@ import tensorflow as tf
 from keras.callbacks import EarlyStopping
 import gc
 
+loss_weights = [0.81, 1.01, ] 
+
 def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile='./input/final_track1_test_no_anwser.txt',
                 defaultcolumnname=['uid', 'user_city', 'item_id', 'author_id', 'item_city', 'channel', 'finish', 'like', 'music_id', 'did', 'creat_time', 'video_duration'],
                 defaulttarget=['finish', 'like'], defaultmodel="AFM", PERCENT=100):
@@ -83,17 +85,17 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     def auc(y_true, y_pred):
         return tf.py_func(roc_auc_score, (y_true, y_pred), tf.double)
     
-    model.compile("adam", loss="binary_crossentropy", metrics=[auc])
+    model.compile("adam", loss="binary_crossentropy", loss_weights=loss_weights, metrics=[auc])
 
 
     train_model_input = [data[feat.name].values for feat in sparse_feature_list] + \
                         [data[feat.name].values for feat in dense_feature_list]
     train_labels = [data[target].values for target in defaulttarget]
 
-    my_callbacks = [EarlyStopping(monitor='loss', min_delta=1e-3, patience=5, verbose=1, mode='min')]
+    my_callbacks = [EarlyStopping(monitor='loss', min_delta=1e-2, patience=1, verbose=1, mode='min')]
 
     history = model.fit(train_model_input, train_labels,
-                batch_size=2**17, epochs=100, verbose=1, callbacks=my_callbacks)
+                batch_size=2**14, epochs=3, verbose=1, callbacks=my_callbacks)
 
     del [train_model_input, train_labels, data]
 #     import objgraph
