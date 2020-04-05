@@ -7,10 +7,12 @@ from deepctr.models import DeepFM
 from deepctr import SingleFeat
 import tensorflow as tf
 from keras.callbacks import EarlyStopping
- 
-def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile='./input/final_track1_test_no_anwser.txt',
+
+
+def model_pool(defaultfilename='./input/final_track2_train.txt', defaulttestfile='./input/final_track2_test_no_anwser.txt',
                 defaultcolumnname=['uid', 'user_city', 'item_id', 'author_id', 'item_city', 'channel', 'finish', 'like', 'music_id', 'did', 'creat_time', 'video_duration'],
-                defaulttarget=['finish', 'like'], defaultmodel="AFM", PERCENT=100):
+                defaulttarget=['finish', 'like'], defaultmodel="AFM", PERCENT=1):
+
     data = pd.read_csv(defaultfilename, sep='\t', names=defaultcolumnname, iterator=True)
     #1 train file
     take=[]
@@ -18,18 +20,17 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     while loop:
         try:
             chunk=data.get_chunk(10000)
-            if PERCENT < 100 and PERCENT > 0:
-                chunk=chunk.take(list(range(min(chunk.shape[0], PERCENT*100))), axis=0)
+            chunk=chunk.take(list(range(min(chunk.shape[0], PERCENT*100))), axis=0)
             take.append(chunk)
         except StopIteration:
             loop=False
             print('stop iteration')
             
-    data = pd.concat(take, ignore_index=True, copy=False) 
+    data = pd.concat(take, ignore_index=True) 
     train_size = data.shape[0]
     print(train_size)
     
-    #2 test file       
+    #2 extract file       
     test_data = pd.read_csv(defaulttestfile, sep='\t', names=defaultcolumnname, )
     data = data.append(test_data)
     test_size=test_data.shape[0]
@@ -91,13 +92,25 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     def auc(y_true, y_pred):
         return tf.py_func(roc_auc_score, (y_true, y_pred), tf.double)
     
-    model.compile("adam", loss="binary_crossentropy", metrics=[auc])
+
+#     model.compile("adagrad", loss="binary_crossentropy", metrics=[auc])
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=[auc])
     my_callbacks = [EarlyStopping(monitor='loss', min_delta=1e-2, patience=3, verbose=1, mode='min')]
     
     history = model.fit(train_model_input, train_labels,
-                        batch_size=2**14, epochs=100, verbose=1, callbacks=my_callbacks)
+                        batch_size=4096, epochs=100, verbose=1, callbacks=my_callbacks)
     pred_ans = model.predict(test_model_input, batch_size=2**14)
     
+#     nsamples, nx, ny = numpy.asarray(pred_ans).shape
+#     pred_ans = numpy.asarray(pred_ans).reshape((nx*ny, nsamples))
+#     print(test_labels.shape)
+#     print(pred_ans.shape)
+#     
+#     logloss = round(log_loss(test_labels, pred_ans), 4)
+#     try:
+#         roc_auc = round(roc_auc_score(test_labels, pred_ans), 4)
+#     except:
+#         roc_auc=0
         
     result = test_data[['uid', 'item_id', 'finish', 'like']].copy()
     result.rename(columns={'finish': 'finish_probability',
@@ -115,12 +128,13 @@ if __name__ == "__main__":
     import mdeepctr.models
     modelnames = [name for _, name, _ in pkgutil.iter_modules(mdeepctr.models.__path__)]
     functions = ["AFM", "DCN", "MLR",  "DeepFM",
-           "MLR", "NFM", "DIN", "FNN", "PNN", "WDL", "xDeepFM", "AutoInt", ]
+          "NFM", "DIN", "FNN", "PNN", "WDL", "xDeepFM", "AutoInt", ]
     models_dic = dict((function.lower(),function) for function in functions)
     for modelname in modelnames:
-        print(modelname)
-        if models_dic[modelname] not in ["PNN"]:
+        print(models_dic[modelname])
+        if models_dic[modelname] in ["AFM","AutoInt", "DCN","NFM","PNN", "DIN","WDL","MLR","DeepFM","xDeepFM"]:
             continue
-        history = model_pool(defaultmodel=models_dic[modelname],PERCENT=10)
+        history = model_pool(defaultmodel=models_dic[modelname])
         print(history.history)
         
+

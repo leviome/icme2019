@@ -56,8 +56,12 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     data[dense_features].fillna(0, inplace=True)
     
     #4. Label Encoding for sparse features, and do simple Transformation for dense features
+
+    labelencoder={}
     for feat in sparse_features:
         lbe = LabelEncoder()
+        labelencoder[feat]=lbe
+
         data[feat] = lbe.fit_transform(data[feat])
     #5. Dense normalize
     if dense_features:
@@ -101,7 +105,9 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
 #     import objgraph
 #     objgraph.show_refs([data], filename='data-graph.png')
     
-    #2 test file       
+
+    #2 extract file       
+
     test_data = pd.read_csv(defaulttestfile, sep='\t', names=defaultcolumnname, )
     raw_test_data=test_data.copy()
     #data = data.append(test_data)
@@ -113,14 +119,19 @@ def model_pool(defaultfilename='./input/final_track1_train.txt', defaulttestfile
     test_data[dense_features].fillna(0, inplace=True)
     #4. Label Encoding for sparse features, and do simple Transformation for dense features
     for feat in sparse_features:
-        lbe = LabelEncoder()
+
+#         lbe = LabelEncoder()
+        lbe = labelencoder[feat]
+
         test_data[feat] = lbe.fit_transform(test_data[feat])
     #5. Dense normalize
     if dense_features:
         mms = MinMaxScaler(feature_range=(0, 1))
         test_data[dense_features] = mms.fit_transform(test_data[dense_features])
     #*****************normal
-    #test = test_data
+
+    #extract = test_data
+
     test_model_input = [test_data[feat.name].values for feat in sparse_feature_list] + \
         [test_data[feat.name].values for feat in dense_feature_list]
        
@@ -146,8 +157,9 @@ if __name__ == "__main__":
     models_dic = dict((function.lower(),function) for function in functions)
     for modelname in modelnames:
         print(modelname)
-        if models_dic[modelname] not in ["PNN"]:
+
+        if models_dic[modelname] not in ["AutoInt"]:
             continue
-        history = model_pool(defaultmodel=models_dic[modelname], PERCENT=90)
+        history = model_pool(defaultmodel=models_dic[modelname], PERCENT=10)
         print(history.history)
-        
+
